@@ -11,7 +11,7 @@ const Game = ({ location }) => {
     const[room,setRoom] = useState('');
     const[card,setCard] = useState([]);
     const[creator,setcreator] = useState([]);
-    const bingoBoard = [];
+    const [bingoBoard,setBingoBoard] = useState([]);
     let selected = [];
     
     const ENDPOINT = 'localhost:5000';
@@ -60,8 +60,7 @@ const Game = ({ location }) => {
             let i = 0;
                  setInterval(() => {
                     if(i<data.length){
-                    bingoBoard.push(data[i]);
-                    console.log(bingoBoard);
+                    setBingoBoard(arr => [...arr, data[i]]);
                     document.getElementById("showBoardNumber").innerHTML = data[i];
                     i++;
                     }
