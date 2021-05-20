@@ -11,8 +11,13 @@ const Game = ({ location }) => {
     const[room,setRoom] = useState('');
     const[card,setCard] = useState([]);
     const[creator,setcreator] = useState([]);
-    const [bingoBoard,setBingoBoard] = useState([]);
-    let selected = [];
+    const[bingoBoard,setBingoBoard] = useState([]);
+    const[selected,setSelected] = useState([]);
+    const[count,setCount] = useState(1);
+    const[isSelected,setIsSelected] = useState(false);
+    const[win,setWin] = useState([]);
+    const[lost,setLost] = useState([]);
+    // let selected = [];
     
     const ENDPOINT = 'localhost:5000';
 
@@ -26,7 +31,7 @@ const Game = ({ location }) => {
         setRoom(room);
 
         socket.emit('join-room',{ name,room }, () => {
-            console.log(socket);
+            // console.log(socket);
         });
 
         
@@ -57,11 +62,16 @@ const Game = ({ location }) => {
          });
 
          socket.on('game_board',function(data){
-            let i = 0;
+             let i = 0;
                  setInterval(() => {
-                    if(i<data.length){
+                    if(i<=data.length){
                     setBingoBoard(arr => [...arr, data[i]]);
-                    document.getElementById("showBoardNumber").innerHTML = data[i];
+                    setCount(i)
+                    if(i==30){
+                        document.getElementById("showBoardNumber").innerHTML = "over";         
+                    }else{
+                        document.getElementById("showBoardNumber").innerHTML = data[i];
+                    }
                     i++;
                     }
                  }, 2000);
@@ -83,13 +93,95 @@ const Game = ({ location }) => {
     }
     
     const selectNumber = (id) =>{
-        console.log(bingoBoard);
-
         if(bingoBoard.includes(id)){
-            selected.push(id);
+            setSelected(arr => [...arr, id ]);
+            if(isSelected === false){
+                setIsSelected(true);
+            }
+            console.log("yourss:",selected);
             document.getElementById(id).style.backgroundColor = "yellow";
         }
+    }
+
+    const isBingo = () =>{
+    let bingo = true;
+    let index1;
+    let index2;
+    let k = 0;
+    let bingoDiagonal = false;
+        console.log("selection is", selected);
+        for(let i=0;i<5;i++){
+            for(let j=0;j<5;j++){
+                if(card[i][j] == selected[0]){
+                     index1 = i;
+                     index2 = j;
+                }
+            }
+        }
+
+        if(index1 == index2){
+            let i = 0;
+            let j = 0;
+            for( k=0;k<5;k++){
+                if(!selected.includes(card[i+k][j+k])){
+                    break;
+                }
+            }
+            if(k==5){
+                bingoDiagonal = true;
+            }
+        }
+
+        if(!bingoDiagonal && (index1+index2 == 4)){
+            if(selected.includes(card[0][4]) && selected.includes(card[1][3]) && selected.includes(card[2][2]) && selected.includes(card[3][1]) && selected.includes(card[4][0])){
+                bingoDiagonal = true;                
+            }
+            
+        }
+
         
+        if(!bingoDiagonal){
+            for(let i=0;i<5;i++){
+                // console.log(card[i][index2])
+                if(!selected.includes(card[i][index2])){
+                    bingo = false;
+                    break;
+                }
+            }
+        }
+        
+        if(!bingo){
+            let j;
+            for(j=0;j<5;j++){
+                // console.log("j"+card[index1][j])
+                if(!selected.includes(card[index1][j])){
+                    bingo = false;
+                    break;
+                }
+                
+            }
+            if(j==5){
+                bingo = true;
+            }   
+        }
+        if(bingo || bingoDiagonal){
+            setWin(arr => [...arr, name ]);
+            alert("bingo, you won");
+
+        }else{
+            if(count<30){
+                alert("game is still on");
+                return;
+            
+            }else if(selected.length>1){
+                selected.splice(0,1);
+                isBingo(); 
+            }
+            else if(count == 30){
+                setLost(arr => [...arr, name ]);
+                alert("you lost");
+            }
+        }
     }
 
     return (
@@ -125,6 +217,15 @@ const Game = ({ location }) => {
             <div id="showBoardNumber">
                 Numbers are
             </div>
+            <div>
+                <h1>
+                    your selction is {selected}
+                </h1>
+            </div>
+            {
+                (isSelected === true) ? <button onClick={isBingo}>  BINGO {count} </button> : ''
+            }
+            
            </div>
         </div>
         
