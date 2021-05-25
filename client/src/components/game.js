@@ -3,6 +3,8 @@ import queryString from 'query-string';
 import io from 'socket.io-client';
 import jsonParse from 'parse-json';
 
+import './game.css';
+
 let socket;
 
 const Game = ({ location }) => {
@@ -15,8 +17,8 @@ const Game = ({ location }) => {
     const[selected,setSelected] = useState([]);
     const[count,setCount] = useState(1);
     const[isSelected,setIsSelected] = useState(false);
-    const[win,setWin] = useState([]);
-    const[lost,setLost] = useState([]);
+    const[win,setWin] = useState('');
+    const[lost,setLost] = useState('');
     // let selected = [];
     
     const ENDPOINT = 'localhost:5000';
@@ -75,10 +77,19 @@ const Game = ({ location }) => {
                     i++;
                     }
                  }, 2000);
-                 console.log(bingoBoard);
-             
+                 console.log(bingoBoard);    
+         })
+
+         socket.on('winLOST',function(data){
+             console.log(data);
+             alert("winner and looser", data);
          })
     }, []);
+
+    function showResults(){
+        console.log("yeyey")
+        socket.emit('results',{ win,lost,room });
+    }
 
     const showStart = (who) =>{
         if(who!=''){
@@ -93,7 +104,7 @@ const Game = ({ location }) => {
     }
     
     const selectNumber = (id) =>{
-        if(bingoBoard.includes(id)){
+        if(bingoBoard.includes(id) && !selected.includes(id)){
             setSelected(arr => [...arr, id ]);
             if(isSelected === false){
                 setIsSelected(true);
@@ -165,9 +176,9 @@ const Game = ({ location }) => {
             }   
         }
         if(bingo || bingoDiagonal){
-            setWin(arr => [...arr, name ]);
+            setWin(name);
             alert("bingo, you won");
-
+            showResults();
         }else{
             if(count<30){
                 alert("game is still on");
@@ -178,10 +189,22 @@ const Game = ({ location }) => {
                 isBingo(); 
             }
             else if(count == 30){
-                setLost(arr => [...arr, name ]);
+                setLost(name);
+                console.log(lost);
                 alert("you lost");
+                showResults();
             }
         }
+    }
+
+    const whatColor = () => {
+        let color=[
+            'rgb(118, 240, 101)','rgb(240, 69, 69)','rgb(41, 44, 241)','rgb(250, 160, 42)','rgb(249, 62, 255)','rgb(202, 106, 231)','rgb(211, 241, 76)'
+            ,'rgb(243, 45, 45)','rgb(53, 65, 235)','rgb(33, 241, 137)','rgb(149, 240, 46)','rgb(218, 41, 241)','rgb(220, 233, 37)','rgb(233, 51, 151)'
+            ,'rgb(235, 221, 26)','rgb(154, 245, 69)','rgb(208, 18, 214)','rgb(243, 28, 28)','rgb(6, 255, 243)','rgb(228, 122, 231)','rgb(0, 255, 98)'
+            ,'rgb(255, 0, 0)','rgb(231, 150, 252)','rgb(238, 71, 71)'
+        ]
+        return color[Math.floor(Math.random() * color.length)];
     }
 
     return (
@@ -191,7 +214,7 @@ const Game = ({ location }) => {
                
                <table>
                <thead>
-                   <tr>
+                   <tr id="bingoRow">
                        <td>B</td>
                        <td>I</td>
                        <td>N</td>
@@ -203,11 +226,11 @@ const Game = ({ location }) => {
                     {card.slice(0, card.length).map((item, index) => {
                             return (
                             <tr>
-                                <td id={item[0]} onClick={() => selectNumber(item[0])}>{item[0]}</td>
-                                <td id={item[1]} onClick={() => selectNumber(item[1])}>{item[1]}</td>
-                                <td id={item[2]} onClick={() => selectNumber(item[2])}>{item[2]}</td>
-                                <td id={item[3]} onClick={() => selectNumber(item[3])}>{item[3]}</td>
-                                <td id={item[4]} onClick={() => selectNumber(item[4])}>{item[4]}</td>
+                                <td id={item[0]} onClick={() => selectNumber(item[0])} style={{backgroundColor: whatColor()}}>{item[0]}</td>
+                                <td id={item[1]} onClick={() => selectNumber(item[1])} style={{backgroundColor: whatColor()}}>{item[1]}</td>
+                                <td id={item[2]} onClick={() => selectNumber(item[2])} style={{backgroundColor: whatColor()}}>{item[2]}</td>
+                                <td id={item[3]} onClick={() => selectNumber(item[3])} style={{backgroundColor: whatColor()}}>{item[3]}</td>
+                                <td id={item[4]} onClick={() => selectNumber(item[4])} style={{backgroundColor: whatColor()}}>{item[4]}</td>
                             </tr>
                             );
                         })}
@@ -219,7 +242,7 @@ const Game = ({ location }) => {
             </div>
             <div>
                 <h1>
-                    your selction is {selected}
+                    your selection is {selected} 
                 </h1>
             </div>
             {

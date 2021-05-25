@@ -63,6 +63,11 @@ module.exports.bingoSockets = function(socketServer){
             },3000)
         });     
         })
+
+        socket.on('results',({win,lost,room}, callback) => {
+            console.log("room is",room);
+            io.in(room).emit('winLOST',{win,lost});
+        });
             
         socket.on('disconnect',() => {
             console.log('user left');
